@@ -53,12 +53,12 @@ static void signal_handler(int signum);
 
 int main(int argc, char* argv[]) {
 	int result = 0;
-	int rd, ctr, combo = 0, use_combos = 1;
+	int rd, ctr, combo = 0, use_combos = 1, send_keys = 0 ;
 	char keyStates[256];
 
 	int detach = 0;
 	int opt;
-	while ((opt = getopt(argc, argv, "+dsc")) != -1) {
+	while ((opt = getopt(argc, argv, "+dsck")) != -1) {
 		switch (opt) {
 			case 'd':
 				detach = 1;
@@ -70,8 +70,12 @@ int main(int argc, char* argv[]) {
 				printf("Combos disabled\n");
 				use_combos = 0;
 				break;
+			case 'k':
+				printf("Send key events enabled\n");
+				send_keys = 1;
+				break;
 			default:
-				fprintf(stderr, "Usage: %s [-d] [-s]\n", argv[0]);
+				fprintf(stderr, "Usage: %s [-d] [-s] [-c] [-k]\n", argv[0]);
 				exit(EXIT_FAILURE);
 				break;
 		}
@@ -123,7 +127,10 @@ int main(int argc, char* argv[]) {
 			if (EV_KEY == xarcdev.ev[ctr].type) {
 
 				keyStates[xarcdev.ev[ctr].code] = xarcdev.ev[ctr].value;
-
+				/* also pass through the key event we received */
+				if (send_keys) {
+				  uinput_kbd_write(&uinp_kbd, xarcdev.ev[ctr].code, xarcdev.ev[ctr].value > 0, EV_KEY);
+				}
 				switch (xarcdev.ev[ctr].code) {
 
 				/* ----------------  Player 1 controls ------------------- */
